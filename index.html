@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Language Model Prompt Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <select onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+    </select>
+    <h1 data-i18n="title">Prompt Generator</h1>
+    <label for="promptType" data-i18n="choosePrompt">Choose a prompt type:</label>
+    <select id="promptType" onchange="updateForm()">
+        <option value="info" data-i18n="info">Ask for Information</option>
+        <option value="inspiration" data-i18n="inspiration">Ask for Inspiration</option>
+        <option value="generateText" data-i18n="generateText">Generate a Text</option>
+        <option value="revision" data-i18n="revision">Revision on a Text</option>
+        <option value="generateImage" data-i18n="generateImage">Generate an Image</option>
+    </select>
+
+    <div>
+        <div class="inputDiv">
+            <div class="inputSection">
+                <h2 data-i18n="yourInput">Your Input</h2>
+                <textarea id="currentInput" placeholder=""></textarea>
+                <button id="resetInputButton" data-i18n="resetButton">Reset</button>
+            </div>
+            <div class="inputSection">
+                <h2 data-i18n="currentPromptInput">Current Prompt</h2>
+                <textarea id="currentResult" placeholder=""></textarea>
+                <div>
+                    <button id="copyButton" data-i18n="copyButton">Copy</button>
+                    <span id="copyTooltip"
+                        style="visibility: hidden; position: absolute; transition: all 0.5s ease;">Copied!</span>
+                </div>
+            </div>
+            <div class="inputSection">
+                <h2 data-i18n="currentOpenInput">Current Open Input</h2>
+                <textarea id="currentFreeResult" placeholder=""></textarea>
+                <div>
+                    <button id="copyFreeButton" data-i18n="copyButton">Copy</button>
+                    <button id="resetFreeButton" data-i18n="resetButton">Reset</button>
+                    <span id="freeCopyTooltip"
+                        style="visibility: hidden; position: absolute; transition: all 0.5s ease;">Copied!</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="formContent"></div>
+    </div>
+
+
+    <template id="infoTemplate">
+        <div id="startMessage" message="I need information about "></div>
+        <div id="attituteLevelsContainer"></div>
+    </template>
+
+
+    <template id="inspirationTemplate">
+        <div id="startMessage" message="I need you to give me suggestions about :"></div>
+        <div id="attituteLevelsContainer"></div>
+    </template>
+
+    <template id="revisionTemplate">
+        <div id="startMessage" message="I you to "></div>
+        <div class="toggle-container">
+            <label class="switch">
+                <input type="checkbox" id="correctText" name="correctText" message="correct this text">
+                <span class="slider round"></span>
+            </label>
+            <span data-i18n="correctText">Should correct this text</span>
+        </div>
+
+        <div class="toggle-container">
+            <label class="switch">
+                <input type="checkbox" id="explainCorrection" name="explainCorrection"
+                    message="explain the correction after">
+                <span class="slider round"></span>
+            </label>
+            <span data-i18n="explainCorrection">Should explain the modifications</span>
+        </div>
+
+        <div class="toggle-container">
+            <label class="switch">
+                <input type="checkbox" id="feedbackContent" name="feedbackContent"
+                    message="give feedback on the content">
+                <span class="slider round"></span>
+            </label>
+            <span data-i18n="feedbackContent">Should give feedback on the content</span>
+        </div>
+
+    </template>
+
+    <template id="imageTemplate">
+        <textarea placeholder="Describe the image you want to generate..."></textarea>
+        <div id="resultContainer"></div>
+    </template>
+
+    <template id="textTemplate">
+        <textarea id="currentAnwser" placeholder="Describe the text you want to generate..."></textarea>
+        <div id="resultContainer"></div>
+        <div id="attituteLevelsContainer"></div>
+    </template>
+
+    <template id="resultTemplate">
+        <textarea> </textarea>
+
+    </template>
+
+
+    <template id="attitudeLevelsTemplate">
+        <h2 for="complexityLevel" data-i18n="complexityOfAnwser">Complexity of expected anwser:</h2>
+        <div id="complexityLevel">
+            <input type="radio" id="childLike" name="complexity" value="childLike"
+                message="Explain it as if it was to a young child">
+            <label for="childLike">
+                <img src="images/complexity/childlike.webp" alt="Child Like">
+                <span data-i18n="childLike">Child like</span>
+            </label>
+
+            <input type="radio" id="primarySchool" name="complexity" value="primarySchool"
+                message="Explain it as if it was to a child in primary school">
+            <label for="primarySchool">
+                <img src="images/complexity/primary_school.webp" alt="Primary School Level">
+                <span data-i18n="primarySchool">Primary School</span>
+            </label>
+
+            <input type="radio" id="standard" name="complexity" value="standard" checked message="">
+            <label for="standard">
+                <img src="images/complexity/standard.webp" alt="Standard">
+                <span data-i18n="standard">Standard</span>
+            </label>
+
+            <input type="radio" id="highSchool" name="complexity" value="highSchool"
+                message="Explain it as if it was to a teenager in highSchool">
+            <label for="highSchool">
+                <img src="images/complexity/highSchool.webp" alt="High School">
+                <span data-i18n="highSchool">High School</span>
+            </label>
+
+            <input type="radio" id="expertLevel" name="complexity" value="expertLevel"
+                message="Explain it as if i was an expert in that field">
+            <label for="expertLevel">
+                <img src="images/complexity/expert.webp" alt="Expert Level">
+                <span data-i18n="expertLevel">Expert Level</span>
+            </label>
+        </div>
+
+        <h2 for="lengthLevel" data-i18n="lengthOfAnwser">Length of expected anwser:</h2>
+        <div id="lengthLevel">
+            <input type="radio" id="singleLine" name="length" value="singleLine" message="Explain it in a single line">
+            <label for="singleLine">
+                <img src="images/length/singleLine.webp" alt="Single Line">
+                <span data-i18n="singleLine">Single Line</span>
+            </label>
+            <input type="radio" id="lengthSummary" name="length" value="summary"
+                message="Explain it in a short summary">
+            <label for="lengthSummary">
+                <img src="images/length/summary.webp" alt="Summary">
+                <span data-i18n="summary">Summary</span>
+            </label>
+            <input type="radio" id="lengthStandard" name="length" value="standard" checked message="">
+            <label for="lengthStandard">
+                <img src="images/length/standardLenght.webp" alt="Standard">
+                <span data-i18n="standard">Standard</span>
+            </label>
+            <input type="radio" id="lengthLongForm" name="length" value="longForm"
+                message="Explain it in a long form essay">
+            <label for="lengthLongForm">
+                <img src="images/length/longform.webp" alt="Long Form Essay">
+                <span data-i18n="longForm">Long Form Essay</span>
+            </label>
+        </div>
+
+
+        <h2 for="toneLevel" data-i18n="toneOfAnwser">Tone of expected anwser:</h2>
+        <div id="toneLevel">
+            <section class="tone-setting">
+                <h3>Formality</h3>
+                <input type="radio" id="formalFamiliar" name="formality" value="familiar"
+                    message="Be familiar in your anwser">
+                <label for="formalFamiliar"><img src="images/tone/Formality_informal.webp"
+                        alt="Familiar"><span>Familiar</span></label>
+                <input type="radio" id="formalStandard" name="formality" value="standard" checked message="">
+                <label for="formalStandard"><img src="images/tone/standard.webp"
+                        alt="Standard"><span>Standard</span></label>
+                <input type="radio" id="formalStrictly" name="formality" value="strictly" message="Stay Stricly Formal">
+                <label for="formalStrictly"><img src="images/tone/Formality_formal.webp"
+                        alt="Strictly"><span>Strictly</span></label>
+
+            </section>
+
+            <section class="tone-setting">
+                <h3>Enthusiastic</h3>
+                <input type="radio" id="enthusiasticVery" name="enthusiastic" value="very"
+                    message="Give a very enthusiastic anwser ! (And use emojies)">
+                <label for="enthusiasticVery"><img src="images/tone/Enthusiastic_very.webp"
+                        alt="Very"><span>Very</span></label>
+                <input type="radio" id="enthusiasticStandard" name="enthusiastic" value="standard" checked message="">
+                <label for="enthusiasticStandard"><img src="images/tone/standard.webp"
+                        alt="Standard"><span>Standard</span></label>
+                <input type="radio" id="enthusiasticSomber" name="enthusiastic" value="somber"
+                    message="Stay Sober in the anwser">
+                <label for="enthusiasticSomber"><img src="images/tone/Enthusiastic_somber.webp"
+                        alt="Somber"><span>Somber</span></label>
+            </section>
+
+            <section class="tone-setting">
+                <h3>Humoristic</h3>
+                <input type="radio" id="humoristicVery" name="humoristic" value="very"
+                    message="Be funny in the anwser !">
+                <label for="humoristicVery"><img src="images/tone/Humoristic_funny.webp"
+                        alt="Very"><span>Very</span></label>
+                <input type="radio" id="humoristicStandard" name="humoristic" value="standard" checked message="">
+                <label for="humoristicStandard"><img src="images/tone/standard.webp"
+                        alt="Standard"><span>Standard</span></label>
+                <input type="radio" id="humoristicSomber" name="humoristic" value="somber"
+                    message="Keep it very serious">
+                <label for="humoristicSomber"><img src="images/tone/Humoristic_somber.webp"
+                        alt="Somber"><span>Somber</span></label>
+            </section>
+
+            <section class="tone-setting">
+                <h3>Empathy</h3>
+                <input type="radio" id="empathyVery" name="empathy" value="very" message="Please be very empathic !">
+                <label for="empathyVery"><img src="images/tone/Empathy_very.webp" alt="Very"><span>Very</span></label>
+                <input type="radio" id="empathyStandard" name="empathy" value="standard" checked message="">
+                <label for="empathyStandard"><img src="images/tone/standard.webp"
+                        alt="Standard"><span>Standard</span></label>
+                <input type="radio" id="empathyCondescendant" name="empathy" value="condescendant"
+                    message="Use a condescendant tone in your anwser">
+                <label for="empathyCondescendant"><img src="images/tone/Empathy_distain.webp"
+                        alt="Condescendant"><span>Condescendant</span></label>
+            </section>
+
+            <section class="tone-setting">
+                <h3>Objectivity</h3>
+                <input type="radio" id="objectivitySubjective" name="objectivity" value="subjective"
+                    message="Be subjective in the anwser">
+                <label for="objectivitySubjective"><img src="images/tone/Objectivity_Subjective.webp"
+                        alt="Subjective"><span>Subjective</span></label>
+                <input type="radio" id="objectivityStandard" name="objectivity" value="standard" checked message="">
+                <label for="objectivityStandard"><img src="images/tone/standard.webp"
+                        alt="Standard"><span>Standard</span></label>
+                <input type="radio" id="objectivityPurelyObjective" name="objectivity" value="purelyObjective"
+                    message="Stay absolutly objective">
+                <label for="objectivityPurelyObjective"><img src="images/tone/Objectivity_Objective.webp"
+                        alt="Purely Objective"><span>Purely Objective</span></label>
+            </section>
+        </div>
+    </template>
+
+    <!-- Functions -->
+    <script>
+        function updateForm() {
+            const selection = document.getElementById("promptType").value;
+            const formContent = document.getElementById("formContent");
+            formContent.innerHTML = '';
+
+            let template = document.getElementById(`${selection}Template`);
+
+            if (template) {
+                const clone = document.importNode(template.content, true);
+                formContent.appendChild(clone);
+
+                let resultTemplate = document.getElementById("resultTemplate");
+                const resultClone = document.importNode(resultTemplate.content, true);
+
+                let currentInput = document.getElementById('currentInput');
+                currentInput.placeholder = translations[lang][`${selection}Placeholder`];
+
+                if (selection == "info" || selection == "inspiration" || selection == "generateText") {
+                    let attituteTemplate = document.getElementById("attitudeLevelsTemplate");
+                    const attituteClone = document.importNode(attituteTemplate.content, true);
+
+                    let attituteZone = document.getElementById("attituteLevelsContainer");
+                    attituteZone.appendChild(attituteClone);
+
+                    const radios = document.querySelectorAll('input[type="radio"]');
+                    radios.forEach(radio => {
+                        radio.addEventListener('change', function () {
+                            buildMessage();
+                        });
+                    });
+                }
+
+            }
+        }
+
+        function buildMessage() {
+            let message = document.getElementById('startMessage').getAttribute("message");
+            message += document.getElementById('currentInput').value;
+
+            let complexityCheck = document.querySelector('input[name="complexity"]:checked').getAttribute("message");
+            if (complexityCheck != "") {
+                message += "\n" + complexityCheck;
+            }
+            let lengthCheck = document.querySelector('input[name="length"]:checked').getAttribute("message");
+            if (lengthCheck != "") {
+                message += "\n" + lengthCheck;
+            }
+
+            let formalityCheck = document.querySelector('input[name="formality"]:checked').getAttribute("message");
+            if (formalityCheck != "") {
+                message += "\n" + formalityCheck;
+            }
+
+            let enthusiasticCheck = document.querySelector('input[name="enthusiastic"]:checked').getAttribute("message");
+            if (enthusiasticCheck != "") {
+                message += "\n" + enthusiasticCheck;
+            }
+
+            let humoristicCheck = document.querySelector('input[name="humoristic"]:checked').getAttribute("message");
+            if (humoristicCheck != "") {
+                message += "\n" + humoristicCheck;
+            }
+
+            let empathyCheck = document.querySelector('input[name="empathy"]:checked').getAttribute("message");
+            if (empathyCheck != "") {
+                message += "\n" + empathyCheck;
+            }
+
+            let objectivityCheck = document.querySelector('input[name="objectivity"]:checked').getAttribute("message");
+            if (objectivityCheck != "") {
+                message += "\n" + objectivityCheck;
+            }
+
+            document.getElementById('currentResult').value = message;
+            if (editSectionUntouched) {
+                document.getElementById('currentFreeResult').value = message;
+            }
+        }
+
+
+    </script>
+
+    <!-- Setting up buttons  -->
+    <script>
+        var editSectionUntouched = true
+
+        document.getElementById('copyButton').addEventListener('click', function (event) {
+            var textarea = document.getElementById('currentResult');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+
+            var tooltip = document.getElementById('copyTooltip');
+            tooltip.style.visibility = 'visible';
+            tooltip.style.top = (event.clientY + 15) + 'px';
+            tooltip.style.left = event.clientX + 'px';
+            tooltip.classList.add('fade-move');
+
+            setTimeout(function () {
+                tooltip.style.visibility = 'hidden';
+                tooltip.classList.remove('fade-move');
+                tooltip.style.opacity = 0;
+                tooltip.style.transform = 'translate(-50%, 20px)';
+            }, 1500);
+        });
+
+        document.getElementById('copyFreeButton').addEventListener('click', function (event) {
+            var textarea = document.getElementById('currentFreeResult');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+
+            var tooltip = document.getElementById('freeCopyTooltip');
+            tooltip.style.visibility = 'visible';
+            tooltip.style.top = (event.clientY + 15) + 'px';
+            tooltip.style.left = event.clientX + 'px';
+            tooltip.classList.add('fade-move');
+
+            setTimeout(function () {
+                tooltip.style.visibility = 'hidden';
+                tooltip.classList.remove('fade-move');
+                tooltip.style.opacity = 0;
+                tooltip.style.transform = 'translate(-50%, 20px)';
+            }, 1500);
+        });
+
+        document.getElementById('resetInputButton').addEventListener('click', function () {
+            document.getElementById('currentInput').value = '';
+        });
+
+        document.getElementById('resetFreeButton').addEventListener('click', function () {
+            document.getElementById('currentFreeResult').value = document.getElementById('currentResult').value;
+            editSectionUntouched = true;
+
+        });
+
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            buildMessage();
+            const currentInputArea = document.getElementById('currentInput');
+            currentInputArea.addEventListener('input', function () {
+                buildMessage();
+            });
+
+            const currentOpenInput = document.getElementById('currentFreeResult');
+            currentOpenInput.addEventListener('input', function () {
+                editSectionUntouched = false;
+            });
+        });
+    </script>
+
+    <!-- Translation Script -->
+    <script>
+        var lang = 'en';
+        const translations = {
+            en: {
+                title: "Prompt Generator",
+                choosePrompt: "Choose a prompt type:",
+                submitButton: "Submit",
+                info: "Ask for Information",
+                inspiration: "Ask for Inspiration",
+                revision: "Revision on a Text",
+                generateImage: "Generate an Image",
+                generateText: "Generate a Text",
+                infoPlaceholder: "Describe your information need...",
+                inspirationPlaceholder: "Describe the type of inspiration you need...",
+                revisionPlaceholder: "Paste the text you need revised...",
+                generateImagePlaceholder: "Describe the image you want to generate...",
+                generateTextPlaceholder: "Describe the text you want to generate...",
+                childLike: "Child like",
+                primarySchool: "Primary School",
+                summary: "Summary",
+                standard: "Standard",
+                expertLevel: "Expert Level",
+                longForm: "Long Form Essay",
+                complexityOfAnwser: "Complexity of expected anwser:",
+                highSchool: "High School",
+                singleLine: "Single Line",
+                correctText: "Should correct this text",
+                explainCorrection: "Should explain the modifications",
+                feedbackContent: "Should give feedback on the content",
+                yourInput: "Our Input",
+                currentPromptInput: "Current Prompt",
+                currentOpenInput: "Current Open Input",
+                copyButton: "Copy",
+                applyButton: "Apply",
+                resetButton: "Reset",
+
+            },
+            fr: {
+                title: "Générateur de Demandes",
+                choosePrompt: "Choisissez un type de demande:",
+                submitButton: "Soumettre",
+                info: "Demander une information",
+                inspiration: "Demander une inspiration",
+                revision: "Révision d'un texte",
+                generateImage: "Générer une image",
+                generateText: "Générer un texte",
+                infoPlaceholder: "Décrivez votre besoin d'informations...",
+                inspirationPlaceholder: "Décrivez le type d'inspiration nécessaire...",
+                revisionPlaceholder: "Collez le texte à réviser...",
+                generateImagePlaceholder: "Décrivez l'image à générer...",
+                generateTextPlaceholder: "Décrivez le texte à générer...",
+                childLike: "Comme un enfant",
+                primarySchool: "École primaire",
+                summary: "Résumé",
+                standard: "Standard",
+                expertLevel: "Niveau expert",
+                longForm: "Essai long",
+                complexityOfAnwser: "Complexité de la réponse attendu:",
+                highSchool: "Lycée",
+                singleLine: "Ligne unique",
+                correctText: "Devrait corriger le texte",
+                explainCorrection: "Devrait expliquer les modifications",
+                feedbackContent: "Devrait donner un retour sur le contenu",
+                yourInput: "Votre Entrée",
+                currentPromptInput: "Prompt Actuelle",
+                currentOpenInput: "Prompt Ouverte Actuelle",
+                copyButton: "Copier",
+                applyButton: "Appliquer",
+                resetButton: "Réinitialé",
+
+            }
+        };
+
+        function changeLanguage(newLang) {
+            lang = newLang;
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (element.tagName.toLowerCase() === 'input' || element.tagName.toLowerCase() === 'textarea') {
+                    element.placeholder = translations[lang][key];
+                } else {
+                    element.innerText = translations[lang][key];
+                }
+            });
+        }
+
+        updateForm();
+    </script>
+</body>
+
+</html>
