@@ -66,6 +66,11 @@
         <div id="attituteLevelsContainer"></div>
     </template>
 
+    <template id="generateTextTemplate">
+        <div id="startMessage" message="I need information about "></div>
+        <div id="attituteLevelsContainer"></div>
+    </template>
+
     <template id="revisionTemplate">
         <div id="startMessage" message="I you to "></div>
         <div class="toggle-container">
@@ -101,16 +106,6 @@
         <div id="resultContainer"></div>
     </template>
 
-    <template id="textTemplate">
-        <textarea id="currentAnwser" placeholder="Describe the text you want to generate..."></textarea>
-        <div id="resultContainer"></div>
-        <div id="attituteLevelsContainer"></div>
-    </template>
-
-    <template id="resultTemplate">
-        <textarea> </textarea>
-
-    </template>
 
 
     <template id="attitudeLevelsTemplate">
@@ -268,9 +263,6 @@
                 const clone = document.importNode(template.content, true);
                 formContent.appendChild(clone);
 
-                let resultTemplate = document.getElementById("resultTemplate");
-                const resultClone = document.importNode(resultTemplate.content, true);
-
                 let currentInput = document.getElementById('currentInput');
                 currentInput.placeholder = translations[lang][`${selection}Placeholder`];
 
@@ -390,7 +382,6 @@
         document.getElementById('resetFreeButton').addEventListener('click', function () {
             document.getElementById('currentFreeResult').value = document.getElementById('currentResult').value;
             editSectionUntouched = true;
-
         });
 
 
